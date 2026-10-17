@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="pop">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Прежде чем поверить — интерактивный квиз</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Rubik:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0720;--panel:rgba(18,10,46,.65);--cd:rgba(255,255,255,.06);--bd:rgba(255,255,255,.14);--bw:1px;--rd:18px;--rdl:36px;--tx:#f4f1ff;--mu:#a79fc7;--a1:#8b5cf6;--a2:#ff2e93;--a3:#c6ff3d;--a4:#22d3ee;--ok:#34f5a0;--no:#ff4d8d;--hl:#c6ff3d;--on:#fff;--fd:'Unbounded',sans-serif;--fb:'Manrope',sans-serif;--sh:none;--shh:0 14px 40px rgba(34,211,238,.25);--shp:0 0 0 1px rgba(139,92,246,.3),0 30px 90px rgba(0,0,0,.55),0 0 90px rgba(139,92,246,.25);--lift:translateY(-5px);--hb:var(--a4);--grad:linear-gradient(135deg,var(--a1),var(--a2));--tg:linear-gradient(90deg,var(--a3),var(--a4),var(--a2),var(--a3));--bgimg:linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px);--bgsz:48px 48px;--bm:20%;--bt:var(--tx);--blur:22px;--blobs:.45}
+[data-theme=pop]{--bg:#ffe45e;--panel:#fffaf0;--cd:#fff;--bd:#111;--bw:3px;--rd:16px;--rdl:30px;--tx:#111;--mu:#4a4a4a;--a1:#ff4fa3;--a2:#3d5afe;--a3:#00d68f;--a4:#ffc400;--ok:#00c27a;--no:#ff3b3b;--hl:#3d5afe;--on:#fff;--fb:'Rubik',sans-serif;--sh:5px 5px 0 #111;--shh:8px 8px 0 #111;--shp:10px 10px 0 #111;--lift:translate(-3px,-3px) rotate(-.6deg);--hb:#111;--grad:var(--a1);--tg:linear-gradient(var(--a2),var(--a2));--bgimg:radial-gradient(#11111140 2px,transparent 2px);--bgsz:24px 24px;--bm:100%;--bt:#111;--blur:0px;--blobs:0}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);font-size:17px;min-height:100vh;display:flex;justify-content:center;align-items:center;overflow-x:hidden;transition:background .5s}
+.bg{position:fixed;inset:0;z-index:0;background-image:var(--bgimg);background-size:var(--bgsz)}
+.blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:var(--blobs);transition:.5s}
+.blobs i{position:absolute;width:46vmax;height:46vmax;border-radius:50%;filter:blur(50px);animation:drift 18s ease-in-out infinite alternate}
+.blobs i:nth-child(1){background:var(--a1);top:-15%;left:-10%}.blobs i:nth-child(2){background:var(--a2);bottom:-20%;right:-10%;animation-delay:-6s}.blobs i:nth-child(3){background:var(--a4);width:30vmax;height:30vmax;top:40%;left:55%;animation-delay:-12s}
+@keyframes drift{to{transform:translate(8vw,6vh) scale(1.2)}}
+#fx,#rain{position:fixed;inset:0;pointer-events:none}#fx{z-index:300}#rain{z-index:0;opacity:.35;display:none}
+
+#app{position:relative;z-index:1;width:calc(100vw - 32px)!important;height:calc(100svh - 32px)!important;margin:16px!important;max-width:1100px;background:var(--panel)!important;border:3px solid #111!important;border-radius:32px!important;box-shadow:10px 10px 0 #111!important;overflow:hidden;display:flex;transition:.4s}
+#app::before{content:'';position:absolute;inset:0 0 auto 0;height:10px;z-index:4;background:linear-gradient(90deg,var(--a1) 0 25%,var(--a2) 0 50%,var(--a3) 0 75%,var(--a4) 0 100%)}
+#app.hit{animation:hit .4s}@keyframes hit{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.themes{position:fixed;top:10px;right:10px;z-index:80;display:flex;gap:6px;padding:5px;border-radius:50px;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}
+.themes button{border:0;background:transparent;color:#fff;font:700 .75rem 'Manrope',sans-serif;padding:7px 12px;border-radius:50px;cursor:pointer;transition:.2s}
+.themes button.on{background:#fff;color:#000}
+.steps{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3}
+.steps i{width:34px;height:9px;border-radius:7px;background:var(--bd);border:calc(var(--bw)/1.5) solid var(--bd);transition:.4s}.steps i.on{background:var(--a3);box-shadow:0 0 12px var(--a3)}
+[data-theme=pop] .steps i.on{background:var(--a1);box-shadow:none}
+.container{width:100%;height:100%;padding:36px 30px 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--a1) transparent}
+.page{display:none;flex-direction:column;align-items:center;width:100%;height:100%;justify-content:safe center}.page.active{display:flex}
+.page.active>*{animation:rise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*55ms)}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.kicker{font-family:var(--fd);font-size:.7rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--hl);margin-bottom:10px;text-align:center}
+.title{font-family:var(--fd);font-weight:900;font-size:clamp(1.4rem,3.7vw,2.7rem);text-align:center;margin-bottom:.4em;line-height:1.18;text-wrap:balance}
+.title.big{font-size:clamp(2.2rem,6.4vw,4.6rem);line-height:1.1;letter-spacing:.5px}
+[data-theme=pop] .title span{-webkit-text-fill-color:#fff;background:var(--a1);padding:0 .22em;border:var(--bw) solid #111;box-shadow:5px 5px 0 #111;display:inline-block;transform:rotate(-2deg);margin-top:6px}
+.subtitle{font-size:clamp(1.05rem,1.5vw,1.3rem);color:#444;text-align:center;line-height:1.65;max-width:640px;margin-bottom:.8em;font-weight:500}
+.text-block{font-size:clamp(1.05rem,1.3vw,1.25rem);line-height:1.8;max-width:720px;margin:.4em 0;width:100%}.text-block strong{color:var(--hl);font-weight:800}
+.quote{font-size:1rem;font-weight:700;border-left:5px solid var(--a2);padding:10px 18px;margin:.8em 0;max-width:650px;width:100%;background:var(--cd);border-radius:0 14px 14px 0}
+.divider-thick{height:6px;width:110px;background:var(--grad);margin:.4em auto .9em;border-radius:6px}
+.hero-icon-small{font-size:3rem;line-height:1;margin:4px 0;display:inline-block;animation:fl 3s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-8px) rotate(4deg)}}
+.stks{position:absolute;inset:0;pointer-events:none;overflow:hidden}.stks i{position:absolute;font-style:normal;font-size:clamp(2rem,4vw,3.2rem);opacity:.95;animation:fl 4s ease-in-out infinite;filter:drop-shadow(0 6px 0 rgba(0,0,0,.25))}
+.stks i:nth-child(1){top:11%;left:5%}.stks i:nth-child(2){top:16%;right:6%;animation-delay:-1s}.stks i:nth-child(3){bottom:16%;left:7%;animation-delay:-2s}.stks i:nth-child(4){bottom:12%;right:5%;animation-delay:-3s}
+.ticker{width:100%;max-width:860px;margin:10px auto 18px;border:3px solid #111;border-radius:18px;box-shadow:4px 4px 0 #111;transform:rotate(-1deg);overflow:hidden;padding:8px 0;background:var(--a4);color:#111}
+.ticker div{display:flex;gap:30px;width:max-content;font-family:var(--fd);font-weight:800;font-size:.78rem;letter-spacing:2px;animation:tick 20s linear infinite}@keyframes tick{to{transform:translateX(-50%)}}
+.feature-card,.stat-card,.sign-item,.mode-card,.game-card,.game-header,.game-text,.sort-card,.answer-btn,.pair-item,.player-panel,.result-box,.detail-statement,.detail-block,.fake-post,.bar-row,.stat-box,.feedback,.broken-arg,.etalon-box,.sort-bin,.text-input,.fixarea{background:var(--cd);border:var(--bw) solid var(--bd);border-radius:22px;box-shadow:var(--sh);transition:.2s cubic-bezier(.2,.8,.2,1)}
+.feature-card:hover,.mode-card:hover,.game-card:hover,.sign-item:hover,.stat-card:hover,.sort-bin:hover,.pair-item:hover,.answer-btn:hover:not(:disabled){transform:var(--lift);box-shadow:var(--shh);border-color:var(--hb)}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:720px;margin:14px 0}
+.feature-card{padding:18px 12px;text-align:center}.f-icon{font-size:2.3rem;display:block;margin-bottom:6px}.f-text{font-size:.86rem;font-weight:800;line-height:1.3}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:700px;margin:14px 0}
+.stat-card{--sc:var(--a4);padding:22px 12px;text-align:center}.stat-card.pink{--sc:var(--a2)}.stat-card.orange{--sc:var(--a3)}
+.s-num{font-family:var(--fd);font-size:clamp(1.4rem,3vw,2.1rem);font-weight:900;color:var(--sc);text-shadow:0 0 22px var(--sc);line-height:1}.s-label{font-size:.92rem;color:#333;margin-top:8px;line-height:1.3;font-weight:600}
+[data-theme=pop] .stat-card{background:var(--sc)}[data-theme=pop] .s-num{color:#111;text-shadow:none}
+.signs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:700px;margin:12px 0}
+.sign-item{display:flex;align-items:center;gap:14px;padding:14px 16px}.sign-item .n{font-family:var(--fd);font-weight:900;font-size:1.1rem;color:var(--hl);opacity:.8}.s-emoji{font-size:1.8rem}.s-text{font-size:.95rem;font-weight:800}
+.bar-row{width:100%;max-width:620px;margin:6px 0;padding:12px 16px}.bar-label{font-size:.88rem;margin-bottom:8px;display:flex;justify-content:space-between;font-weight:600}.bar-label strong{color:var(--hl);font-family:var(--fd)}
+.bar-track{height:12px;background:rgba(128,128,128,.25);border:calc(var(--bw)/1.5) solid var(--bd);border-radius:12px;overflow:hidden}.bar-fill{height:100%;background:var(--grad);animation:grow 1.4s .4s cubic-bezier(.2,.8,.2,1) both}@keyframes grow{from{width:0}}
+.badge-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:12px 0;max-width:680px}
+.badge{--bc:var(--a1);padding:8px 16px;border-radius:12px;font-size:.85rem;font-weight:800;background:color-mix(in srgb,var(--bc) var(--bm),transparent);border:var(--bw) solid var(--bc);color:var(--bt);transform:rotate(-3deg)}
+.badge.pink{--bc:var(--a2);transform:rotate(2.5deg)}.badge.green{--bc:var(--a3);transform:rotate(-1.5deg)}.badge.orange{--bc:var(--a4);transform:rotate(3deg)}
+[data-theme=pop] .badge{border-color:#111;box-shadow:3px 3px 0 #111}
+.nav-buttons{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:18px;align-items:center}
+.btn{background:var(--cd);border:var(--bw) solid var(--bd);color:var(--tx);font-weight:800;font-family:var(--fb);font-size:1.02rem;padding:12px 26px;border-radius:20px;min-height:50px;cursor:pointer;transition:.15s;box-shadow:var(--sh)}
+.btn:hover{transform:var(--lift);box-shadow:var(--shh);border-color:var(--hb)}.btn:active{transform:scale(.95);box-shadow:none}
+.btn.secondary{color:var(--mu)}
+.btn.primary{background:var(--grad);color:var(--on);border-color:var(--bd);box-shadow:0 8px 30px color-mix(in srgb,var(--a2) 50%,transparent)}
+[data-theme=pop] .btn.primary{box-shadow:5px 5px 0 #111}
+.btn.big{font-family:var(--fd);font-size:1.15rem;padding:16px 38px;}
+.btn.full{width:100%;max-width:340px;padding:14px 26px;font-size:1rem}
+.footer-sign{margin-top:14px;font-size:.72rem;color:var(--mu);opacity:.7;letter-spacing:1px;text-align:center}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:620px;margin:16px 0}.mode-card{padding:32px 20px;text-align:center;cursor:pointer}
+.m-icon{font-size:3.2rem;display:block;margin-bottom:8px}.m-title{font-family:var(--fd);font-weight:800;font-size:1.05rem}.m-desc{font-size:.9rem;color:var(--mu);margin-top:8px;line-height:1.5;font-weight:500}
+.game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:740px;margin:16px 0}
+.game-card{padding:16px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;position:relative;}
+.game-card .done{position:absolute;top:-8px;right:-6px;width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--ok) 40%,#fff);border:2px solid #111;display:grid;place-items:center;font-weight:900;font-size:.75rem;color:#fff;opacity:.6;transform:rotate(8deg)}
+.chip{display:inline-block;margin-left:8px;padding:2px 12px;border-radius:50px;background:var(--a4);border:3px solid #111;color:#111;font-weight:800}
+.g-icon{font-size:2.1rem;width:60px;height:60px;display:grid;place-items:center;border-radius:var(--rd);background:color-mix(in srgb,var(--a1) 30%,transparent);border:var(--bw) solid var(--bd);flex-shrink:0}
+.game-card:nth-child(4n+2) .g-icon{background:color-mix(in srgb,var(--a2) 30%,transparent)}.game-card:nth-child(4n+3) .g-icon{background:color-mix(in srgb,var(--a3) 30%,transparent)}.game-card:nth-child(4n) .g-icon{background:color-mix(in srgb,var(--a4) 30%,transparent)}
+.g-content{flex:1}.g-title{font-weight:800;font-size:1rem}.g-desc{font-size:.82rem;color:var(--mu);margin-top:4px;line-height:1.4;font-weight:500}
+.game-header{display:flex;justify-content:space-between;width:100%;max-width:680px;padding:10px 16px;font-size:.92rem;font-weight:800;color:var(--mu);margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.score{color:var(--hl);font-family:var(--fd)}.errors{color:var(--no);font-family:var(--fd)}.turn{color:var(--a4)}
+.game-question{font-size:clamp(1.15rem,1.8vw,1.45rem);font-weight:800;text-align:center;margin:10px 0 18px;max-width:640px;line-height:1.5}
+.game-text,.sort-card{border-left:6px solid var(--a4);padding:20px 24px;font-size:1.2rem;line-height:1.6;max-width:640px;margin:10px 0 20px;text-align:left}
+.game-text em{color:var(--hl)}.sort-card{font-weight:700;text-align:center;width:100%;min-height:80px;display:flex;align-items:center;justify-content:center;border-left-color:var(--a3)}
+.answer-grid{display:grid;gap:12px;width:100%;max-width:640px}.answer-grid.two,.answer-grid.four{grid-template-columns:1fr 1fr}
+.answer-btn{position:static;padding:18px 20px;font-family:var(--fb);font-size:1.08rem;font-weight:800;color:var(--tx);cursor:pointer;text-align:center;line-height:1.35;border-radius:20px;height:auto;white-space:normal;}
+.answer-btn.correct,.sort-bin.correct,.pair-item.correct-pick{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 22%,var(--cd));box-shadow:0 0 28px color-mix(in srgb,var(--ok) 50%,transparent);animation:popCorrect .5s}
+.answer-btn.wrong,.sort-bin.wrong,.pair-item.wrong-pick{border-color:var(--no);background:color-mix(in srgb,var(--no) 22%,var(--cd));box-shadow:0 0 28px color-mix(in srgb,var(--no) 50%,transparent);animation:shake .4s}
+[data-theme=pop] .answer-btn.correct,[data-theme=pop] .answer-btn.wrong{border-color:#111;box-shadow:var(--sh)}
+.answer-btn:disabled{cursor:default}
+@keyframes popCorrect{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.feedback{margin:16px 0;padding:18px 20px;font-size:.96rem;line-height:1.6;max-width:640px;width:100%;display:none;font-weight:500;border-radius:14px;}.feedback.show{display:block;animation:fadeIn .3s}
+.feedback.good{border-color:var(--ok);border-left-width:6px;background:color-mix(in srgb,var(--ok) 16%,var(--cd))}.feedback.bad{border-color:var(--no);border-left-width:6px;background:color-mix(in srgb,var(--no) 16%,var(--cd))}
+.fb-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.fb-actions .btn{padding:8px 18px;font-size:.85rem}
+.input-wrap{width:100%;max-width:640px;margin:10px 0}.text-input,.fixarea{width:100%;padding:14px 18px;font-family:var(--fb);font-size:1rem;color:var(--tx);outline:none;border-radius:14px;border:3px solid #111;}.fixarea{min-height:90px;max-width:640px;resize:vertical;line-height:1.6}
+.text-input:focus,.fixarea:focus{border-color:var(--a4);box-shadow:0 0 22px color-mix(in srgb,var(--a4) 40%,transparent)}::placeholder{color:var(--mu);opacity:.7}
+.pair-list{width:100%;max-width:640px;margin:14px 0}.pair-item{padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:14px;}.pair-item.selected{border-color:var(--a1);background:color-mix(in srgb,var(--a1) 25%,var(--cd))}
+.pair-item .num{width:30px;height:30px;background:var(--a1);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.player-panel{padding:20px;margin:10px 0;width:100%;max-width:640px;text-align:center;border-radius:14px;}.p-title{font-family:var(--fd);font-weight:800;font-size:1rem;margin-bottom:8px}.p-desc{font-size:.92rem;color:var(--mu);line-height:1.5}
+.timer-display,.race-timer{font-family:var(--fd);font-size:clamp(1.8rem,4.5vw,2.8rem);font-weight:800;color:var(--a4);text-align:center;margin:6px 0 12px;font-variant-numeric:tabular-nums}
+[data-theme=pop] .timer-display,[data-theme=pop] .race-timer{color:var(--a2)}.timer-display.warning,.race-timer.warning{color:var(--no)!important;animation:pulse .5s infinite}@keyframes pulse{50%{opacity:.5;transform:scale(1.08)}}
+.result-box{padding:30px 24px;width:100%;max-width:560px;text-align:center;border-radius:24px;}.result-box h2{font-family:var(--fd);font-weight:800;font-size:clamp(1.1rem,2.2vw,1.5rem)}.result-box .hero-icon-small{font-size:4.5rem}
+.big-score{font-family:var(--fd);font-weight:900;font-size:clamp(3.2rem,6vw,4.6rem);color:var(--hl);margin:8px 0;text-shadow:0 0 30px color-mix(in srgb,var(--hl) 60%,transparent)}[data-theme=pop] .big-score{text-shadow:4px 4px 0 var(--a4)}
+.rank{font-weight:800;font-size:clamp(1.1rem,1.8vw,1.4rem);margin:4px 0}.verdict{font-size:.95rem;margin:10px 0 14px;line-height:1.6;padding:14px;background:rgba(128,128,128,.14);border-radius:14px;font-weight:500}
+.result-box .stats{display:flex;justify-content:center;gap:20px;font-size:.85rem;color:var(--mu);margin:6px 0 16px;flex-wrap:wrap;font-weight:600}.result-box .stats span{color:var(--hl);font-weight:800}
+.progress-bar{width:100%;max-width:640px;height:10px;background:rgba(128,128,128,.25);border:calc(var(--bw)/1.5) solid var(--bd);border-radius:10px;margin:6px 0 12px;overflow:hidden}.progress-fill{height:100%;background:var(--grad);transition:width .4s}
+.detail-wrap{width:100%;max-width:720px;padding:10px 0;text-align:left}.detail-head{text-align:center;margin-bottom:20px}.detail-icon{font-size:4rem;line-height:1;margin-bottom:8px}
+.detail-type{display:inline-block;padding:6px 18px;border-radius:10px;font-weight:800;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;transform:rotate(-2deg);border:var(--bw) solid var(--bd)}
+.detail-type.fake{background:var(--no);color:#fff}.detail-type.fact{background:var(--ok);color:#06241a}.detail-type.opinion{background:var(--a4);color:#111}.detail-type.manip,.detail-type.logic{background:var(--a1);color:#fff}
+.detail-statement{border-left:6px solid var(--a1);padding:20px 24px;font-size:1.05rem;line-height:1.6;margin-bottom:16px;font-weight:700}.detail-block{padding:20px 24px;margin-bottom:14px}
+.detail-block h3{font-family:var(--fd);font-size:.8rem;color:var(--hl);margin-bottom:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px}.detail-block p{font-size:.98rem;line-height:1.7;font-weight:500}.detail-block a{color:var(--hl);text-decoration:underline;word-break:break-word;font-weight:800}
+.sort-bins{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:640px}.sort-bin{padding:24px 12px;text-align:center;font-weight:800;font-size:.95rem;border-style:dashed;cursor:pointer;border-radius:14px;}
+.fake-post{padding:18px 22px;max-width:560px;width:100%;margin:10px 0 18px;text-align:left;border-radius:14px;}.fake-post-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:var(--bw) solid var(--bd)}
+.fake-post-avatar{width:42px;height:42px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;border:var(--bw) solid var(--bd)}.fake-post-name{font-weight:800;font-size:.92rem}.fake-post-sub{font-size:.75rem;color:var(--mu);margin-top:2px}.fake-post-body{font-size:1rem;line-height:1.9;font-weight:500}
+.flag{background:color-mix(in srgb,var(--a4) 35%,transparent);border-bottom:2px dashed var(--a4);border-radius:4px;padding:1px 4px;cursor:pointer;font-weight:800}.flag:hover{background:color-mix(in srgb,var(--a4) 65%,transparent)}.flag.revealed{background:color-mix(in srgb,var(--no) 45%,transparent);border-bottom-color:var(--no)}
+.feed-counter{text-align:center;font-weight:800;color:var(--hl);margin:4px 0 8px}
+.broken-arg{border-color:var(--no);border-left-width:6px;background:color-mix(in srgb,var(--no) 12%,var(--cd));padding:18px 22px;line-height:1.6;font-style:italic;max-width:640px;width:100%;margin-bottom:14px;font-weight:600;border-radius:14px;}
+.etalon-box{display:none;border-color:var(--ok);border-left-width:6px;background:color-mix(in srgb,var(--ok) 14%,var(--cd));padding:18px 22px;margin-top:14px;max-width:640px;width:100%;line-height:1.7;border-radius:14px;}.etalon-box.show{display:block;animation:fadeIn .3s}
+#toast{position:fixed;top:64px;left:50%;z-index:90;transform:translate(-50%,-20px) scale(.8);opacity:0;pointer-events:none;font-family:var(--fd);font-weight:900;font-size:1.2rem;padding:10px 22px;border-radius:50px;background:var(--a4);color:#111;border:var(--bw) solid #111;box-shadow:var(--sh);transition:.3s cubic-bezier(.3,1.6,.5,1)}#toast.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.xp{margin:6px 0 14px;text-align:left}.xp-top{display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;font-size:.95rem}#stars{letter-spacing:2px}
+.memo{width:100%;max-width:640px;display:grid;gap:10px}.memo-step{display:flex;gap:14px;align-items:center;padding:12px 16px;background:var(--cd);border:var(--bw) solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);cursor:pointer;transition:.2s;font-size:.95rem;line-height:1.45;font-weight:500}
+.memo-step:nth-child(odd){transform:rotate(-.5deg)}.memo-step:nth-child(even){transform:rotate(.5deg)}
+.memo-step b{flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--fd);background:var(--a4);border:3px solid #111;transition:.25s}
+.memo-step:hover{transform:translate(-3px,-3px);box-shadow:var(--shh)}.memo-step.on{background:color-mix(in srgb,var(--ok) 25%,#fff)}.memo-step.on b{background:var(--ok);color:#fff}.memo-step.on b::before{content:'✓'}.memo-step.on b{font-size:0}.memo-step.on b::before{font-size:1.2rem}
+.ach{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:640px}.ach div{padding:12px 8px;text-align:center;background:var(--cd);border:var(--bw) solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);font-size:.78rem;font-weight:700;line-height:1.3}
+.ach div i{display:block;font-style:normal;font-size:2rem}.ach div b{display:block;font-size:.85rem}.ach .lock{filter:grayscale(1);opacity:.45;box-shadow:none}.ach .new{animation:pop .6s}
+.plus{position:fixed;z-index:95;pointer-events:none;font-family:var(--fd);font-weight:900;font-size:1.6rem;color:var(--a3);-webkit-text-stroke:2px #111;paint-order:stroke fill;animation:plus 1s ease-out forwards}@keyframes plus{to{transform:translateY(-70px) scale(1.3);opacity:0}}
+@media(max-width:760px){
+    body{padding:0}#app{width:calc(100vw - 12px)!important;height:calc(100svh - 12px)!important;margin:6px!important;border-radius:24px!important;box-shadow:5px 5px 0 #111!important;max-height:none;min-height:100vh;}
+    body{font-size:16px}.title.big{font-size:2.3rem}#app::before{height:8px}
+    .container{padding:50px 14px 20px}.game-grid,.mode-grid,.answer-grid.four,.features-grid,.stats-row,.signs-grid,.sort-bins{grid-template-columns:1fr}.features-grid[style]{grid-template-columns:1fr 1fr!important}.ticker{width:100%;max-width:100%;margin-inline:0px; border-radius: 8px;}
+    .stks{display:none}.themes button{padding:6px 9px}.ach{grid-template-columns:repeat(2,1fr)}
+    .blobs{display:none}.blobs i{animation:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+window.QUIZ_CONFIG={
+  SUPABASE_URL:'https://rpybaffazxqmprxdztql.supabase.co',
+  SUPABASE_ANON_KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJweWJhZmZhenhxbXByeGR6dHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MTMyMTIsImV4cCI6MjEwNzQ4OTIxMn0.xoNu5ok571hV7-h4Sv2opioj571uWkVfVIY7RwFXOb8'
+};
+</script>
+</head>
+<body>
+<div class="bg"></div><div class="blobs"><i></i><i></i><i></i></div><canvas id="rain"></canvas><canvas id="fx"></canvas><div id="toast"></div>
+
+<main id="app">
+<div class="steps" id="steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="container">
+        <section class="page active" id="page1">
+            <div class="stks"><i>🕵️</i><i>🎭</i><i>⚖️</i><i>🧠</i></div>
+            <div class="kicker">Урок критического мышления</div>
+            <div class="title big">НЕ ВЕДИСЬ<br>НА <span>ФЕЙКИ</span></div>
+            <div class="subtitle">7 мини-игр про фейки, манипуляции и логические ловушки. Сможешь переиграть интернет, пока он не переиграл тебя?</div>
+            <div class="ticker"><div><span>ФЕЙК ✦</span><span>ФАКТ ✦</span><span>МНЕНИЕ ✦</span><span>МАНИПУЛЯЦИЯ ✦</span><span>ЛОГИКА ✦</span><span>ФЕЙК ✦</span><span>ФАКТ ✦</span><span>МНЕНИЕ ✦</span><span>МАНИПУЛЯЦИЯ ✦</span><span>ЛОГИКА ✦</span></div></div>
+            <div class="badge-row"><span class="badge">🎮 7 игр</span><span class="badge pink">🏆 Живой рейтинг</span><span class="badge green">🧠 Соло</span><span class="badge orange">⏱️ 40 мин</span></div>
+            <div class="nav-buttons" style="flex-wrap:wrap"><button class="btn primary big" id="btnJoin">📱 Войти в игру</button><button class="btn" id="btnHost">🎓 Я учитель</button><button class="btn secondary" id="btnSolo">Тренироваться одному</button></div>
+            <div class="footer-sign">Проект команды МГПУ им. Евсевьева × МОУ «Средняя школа № 5»</div>
+        </section>
+
+        <section class="page" id="page2"><div class="kicker">Теория · 1 из 6</div><div class="hero-icon-small">🎯</div><div class="title"><span>Что такое</span> критическое мышление?</div><div class="divider-thick"></div><div class="text-block"><strong>Критическое мышление</strong> — это способность анализировать информацию, проверять её достоверность, отделять факты от мнений и принимать решения на основе доказательств, а не эмоций.</div><div class="signs-grid"><div class="sign-item"><span class="s-emoji">❓</span><span class="s-text">Кто это сказал?</span></div><div class="sign-item"><span class="s-emoji">📍</span><span class="s-text">Откуда информация?</span></div><div class="sign-item"><span class="s-emoji">🎯</span><span class="s-text">Какая цель у источника?</span></div><div class="sign-item"><span class="s-emoji">🔬</span><span class="s-text">Есть ли доказательства?</span></div></div><div class="quote">«Критическое мышление — это не дар, а навык. И как любой навык, его можно натренировать.»</div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(1)">← Назад</button><button class="btn" onclick="goToPage(3)">Далее →</button></div></section>
+
+        <section class="page" id="page3"><div class="kicker">Теория · 2 из 6</div><div class="hero-icon-small">⚠️</div><div class="title"><span>Почему</span> это важно именно сейчас?</div><div class="divider-thick"></div><div class="text-block">Мы ежедневно сталкиваемся с <strong>лавиной противоречивой информации</strong>: соцсети, мессенджеры, новости, реклама — всё обрушивается одновременно.</div><div class="stats-row"><div class="stat-card"><div class="s-num" data-n="60" data-suf="%">60%</div><div class="s-label">делятся новостями, не проверив источник</div></div><div class="stat-card pink"><div class="s-num" data-n="6.5" data-d="1" data-suf=" сек">6,5 сек</div><div class="s-label">среднее время удержания внимания</div></div><div class="stat-card orange"><div class="s-num" data-n="7" data-suf=" из 10">7 из 10</div><div class="s-label">школьников не отличают фейк от факта</div></div></div><div class="bar-row"><div class="bar-label"><span>Попадались на фейки</span><strong>72%</strong></div><div class="bar-track"><div class="bar-fill" style="width:72%;"></div></div></div><div class="bar-row"><div class="bar-label"><span>Проверяют источник перед репостом</span><strong>28%</strong></div><div class="bar-track"><div class="bar-fill" style="width:28%;"></div></div></div><div class="features-grid" style="grid-template-columns:repeat(3,1fr);max-width:760px"><div class="feature-card"><span class="f-icon">📱</span><div class="f-text">Соцсети</div><div class="s-label">Лента показывает то, что цепляет, а не то, что правда.</div></div><div class="feature-card"><span class="f-icon">🎣</span><div class="f-text">Кликбейт</div><div class="s-label">Громкий заголовок ради клика.</div></div><div class="feature-card"><span class="f-icon">🏃</span><div class="f-text">Скорость фейков</div><div class="s-label">Эмоциональная ложь расходится быстрее.</div></div></div><div class="quote">«Тот, кто управляет информацией, управляет решениями. Умей проверять — и ты свободен.»</div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(2)">← Назад</button><button class="btn" onclick="goToPage(4)">Далее →</button></div></section>
+
+        <section class="page" id="page4"><div class="kicker">Теория · 3 из 6</div><div class="hero-icon-small">🧬</div><div class="title"><span>Факт, мнение</span> или фейк?</div><div class="divider-thick"></div><div class="features-grid" style="grid-template-columns:repeat(3,1fr);max-width:760px"><div class="feature-card"><span class="f-icon">📊</span><div class="f-text">ФАКТ</div><div class="s-label">Можно проверить, не зависит от чувств. «Эверест — 8849 м над уровнем моря».</div></div><div class="feature-card"><span class="f-icon">💭</span><div class="f-text">МНЕНИЕ</div><div class="s-label">Оценка и вкус, у каждого своё. «Эта игра лучше той».</div></div><div class="feature-card"><span class="f-icon">🕵️</span><div class="f-text">ФЕЙК</div><div class="s-label">Ложь под видом правды. «С 1 января WhatsApp станет платным».</div></div></div><div class="badge-row"><span class="badge green">✅ Проверяется → факт</span><span class="badge orange">💭 Это оценка → мнение</span><span class="badge pink">🚫 Проверка не проходит → фейк</span></div><div class="quote">Правило: если нельзя проверить — это не факт.</div><div class="text-block">Мнение — не плохо! Проблема начинается, когда <strong>мнение выдают за факт</strong>.</div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(3)">← Назад</button><button class="btn" onclick="goToPage(11)">Далее →</button></div></section>
+
+        <section class="page" id="page11"><div class="kicker">Теория · 4 из 6</div><div class="hero-icon-small">🎭</div><div class="title">Как работает <span>манипуляция</span></div><div class="divider-thick"></div><div class="text-block">Манипулятор не доказывает — он <strong>давит на эмоции</strong>, чтобы ты не успел подумать. Вот 6 любимых приёмов:</div><div class="features-grid" style="grid-template-columns:repeat(3,1fr);max-width:760px"><div class="feature-card"><span class="f-icon">😱</span><div class="f-text">Эмоциональная накачка</div><div class="s-label">«ШОК! Это скрывают от тебя!»</div></div><div class="feature-card"><span class="f-icon">⚖️</span><div class="f-text">Ложная дилемма</div><div class="s-label">«Не подписался на канал — не настоящий фанат».</div></div><div class="feature-card"><span class="f-icon">👨‍🔬</span><div class="f-text">Апелляция к авторитету</div><div class="s-label">«Учёные доказали!» — без имён и ссылок.</div></div><div class="feature-card"><span class="f-icon">👥</span><div class="f-text">Социальное доказательство</div><div class="s-label">«Весь класс уже играет. А ты?»</div></div><div class="feature-card"><span class="f-icon">⏳</span><div class="f-text">Искусственный дефицит</div><div class="s-label">«Осталось 2 места! Акция только сегодня!»</div></div><div class="feature-card"><span class="f-icon">🔄</span><div class="f-text">Перевод стрелок</div><div class="s-label">«Не веришь блогеру? Просто завидуешь».</div></div></div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(4)">← Назад</button><button class="btn" onclick="goToPage(12)">Далее →</button></div></section>
+
+        <section class="page" id="page12"><div class="kicker">Теория · 5 из 6</div><div class="hero-icon-small">🧩</div><div class="title"><span>Логические</span> ошибки</div><div class="divider-thick"></div><div class="text-block">Бывает, что факты верные, а вывод — нет. Вот 6 ловушек рассуждения:</div><div class="features-grid" style="grid-template-columns:repeat(3,1fr);max-width:760px"><div class="feature-card"><span class="f-icon">🔗</span><div class="f-text">Совпадение — не причина</div><div class="s-label">«Петух кричит утром — и встаёт солнце. Значит, петух вызывает рассвет?»</div></div><div class="feature-card"><span class="f-icon">🏃</span><div class="f-text">Поспешное обобщение</div><div class="s-label">«Двое геймеров плохо учатся → все геймеры двоечники».</div></div><div class="feature-card"><span class="f-icon">🔄</span><div class="f-text">Обратное следование</div><div class="s-label">«Все программисты умные. Я умный → я программист».</div></div><div class="feature-card"><span class="f-icon">🎯</span><div class="f-text">Переход на личности</div><div class="s-label">«Сам двоечник, твоё мнение о школе не считается».</div></div><div class="feature-card"><span class="f-icon">🪜</span><div class="f-text">Придуманная цепочка</div><div class="s-label">«Разрешат краситься → начнут ходить голыми».</div></div><div class="feature-card"><span class="f-icon">🆕</span><div class="f-text">Апелляция к новизне</div><div class="s-label">«Новое приложение лучше, потому что новое».</div></div></div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(11)">← Назад</button><button class="btn" onclick="goToPage(13)">Далее →</button></div></section>
+
+        <section class="page" id="page13"><div class="kicker">Теория · 6 из 6</div><div class="hero-icon-small">🛡️</div><div class="title">Памятка: <span>прежде чем поверить</span></div><div class="divider-thick"></div><div class="signs-grid" style="grid-template-columns:1fr"><div class="sign-item"><span class="n">1</span><span class="s-text"><strong>СТОП.</strong> Не реагируй сразу. Эмоции — сигнал тревоги.</span></div><div class="sign-item"><span class="n">2</span><span class="s-text"><strong>ИСТОЧНИК.</strong> Кто автор и можно ли ему доверять?</span></div><div class="sign-item"><span class="n">3</span><span class="s-text"><strong>ДОКАЗАТЕЛЬСТВА.</strong> Где факты, цифры, ссылки?</span></div><div class="sign-item"><span class="n">4</span><span class="s-text"><strong>ПЕРЕПРОВЕРЬ.</strong> Пишут ли об этом другие надёжные источники?</span></div><div class="sign-item"><span class="n">5</span><span class="s-text"><strong>ВЫВОД.</strong> Факт, мнение или манипуляция? Только потом — репост.</span></div></div><div class="nav-buttons"><button class="btn secondary" onclick="goToPage(12)">← Назад</button><button class="btn primary" onclick="selectMode('solo')">🎮 К ИГРАМ</button></div></section>
+
+        <section class="page" id="page5">
+            <div class="hero-icon-small">🎮</div>
+            <div class="title"><span>Выбери</span> режим игры</div>
+            <div class="subtitle">Тренируйся один или работай в паре с другом.</div>
+            <div class="mode-grid">
+                <div class="mode-card" onclick="selectMode('solo')">
+                    <span class="m-icon">🧠</span>
+                    <div class="m-title">Индивидуально</div>
+                    <div class="m-desc">8 игр для самостоятельной тренировки</div>
+                </div>
+                <div class="mode-card" onclick="selectMode('pair')">
+                    <span class="m-icon">👥</span>
+                    <div class="m-title">В паре</div>
+                    <div class="m-desc">3 игры для двоих на одном устройстве</div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn secondary" onclick="goToPage(13)">← Назад</button>
+            </div>
+        </section>
+
+        <section class="page" id="page6">
+            <div class="title"><span>Список</span> игр</div>
+            <div class="subtitle" id="modeLabel"></div>
+            <div class="game-grid" id="gameGrid"></div>
+            <div class="nav-buttons">
+                <button class="btn secondary" onclick="goToPage(13)">← Назад</button>
+            </div>
+        </section>
+
+        <section class="page" id="page7">
+            <div class="game-header">
+                <span>Очки: <span class="score" id="scoreDisplay">0</span></span>
+                <span id="headerExtra"></span>
+                <span>Ошибки: <span class="errors" id="errorsDisplay">0</span></span>
+            </div>
+            <div class="progress-bar" id="progressBar" style="display:none;">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div id="gameContent" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+            <button class="btn secondary" id="quitGameBtn" style="margin-top:20px; font-size:0.85rem; padding:8px 20px;">✕ Выйти из игры</button>
+        </section>
+
+        <section class="page" id="page8">
+            <div class="result-box">
+                <div class="hero-icon-small" id="resultIcon">🏆</div>
+                <h2>Твой результат</h2>
+                <div class="big-score" id="finalScore">0</div>
+                <div class="rank" id="finalRank">—</div>
+                <div class="verdict" id="finalVerdict">—</div>
+                <div class="stats">
+                    <div>Верных ответов: <span id="finalCorrect">0</span></div>
+                    <div>Ошибок: <span id="finalErrors">0</span></div>
+                </div>
+                <button class="btn primary full" id="retryBtn" style="margin-bottom:10px;">🔄 Пройти снова</button>
+                <button class="btn full" id="backToGamesBtn">🎮 К списку игр</button>
+                <button class="btn secondary full" id="homeBtn" style="margin-top:10px;">🏠 На главную</button>
+            </div>
+        </section>
+
+        <section class="page" id="page9">
+            <div class="detail-wrap" id="detailContent"></div>
+            <div class="nav-buttons">
+                <button class="btn primary" id="backToGameBtn">← Вернуться к игре</button>
+            </div>
+        </section>
+
+        <section class="page" id="page10">
+            <div class="hero-icon-small">🛡️</div>
+            <div class="title"><span>Памятка</span> на всю жизнь</div>
+            <div class="subtitle">Отмечай пункты. Соберёшь все 5 — получишь иммунитет к фейкам.</div>
+            <div class="memo" id="memo">
+                <div class="memo-step"><b>1</b><div><strong>СТОП.</strong> Не реагируй сразу. Сильные эмоции — повод насторожиться.</div></div>
+                <div class="memo-step"><b>2</b><div><strong>ИСТОЧНИК.</strong> Кто автор? Можно ли ему доверять?</div></div>
+                <div class="memo-step"><b>3</b><div><strong>ДОКАЗАТЕЛЬСТВА.</strong> Где факты, цифры, ссылки, даты?</div></div>
+                <div class="memo-step"><b>4</b><div><strong>ПЕРЕПРОВЕРЬ.</strong> Пишут ли об этом другие надёжные источники?</div></div>
+                <div class="memo-step"><b>5</b><div><strong>ВЫВОД.</strong> Это факт, мнение или манипуляция? Только потом — репост.</div></div>
+            </div>
+            <div class="game-question" style="margin:16px 0 8px">🏅 Твои достижения</div>
+            <div class="ach" id="achGrid"></div>
+            <div class="nav-buttons"><button class="btn secondary" onclick="goToPage(6)">🎮 К играм</button><button class="btn primary" onclick="goToPage(1)">🏠 На главную</button></div>
+        </section>
+
+    </div>
+</main>
+
+<script>
+// --- CORE UTILS ---
+const $ = id => document.getElementById(id);
+const totalPages = 20;
+
+function goToPage(n) {
+    if (n < 1 || n > totalPages) return;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pg = $('page' + n);
+    if (pg) pg.classList.add('active');
+    const c = document.querySelector('.container');
+    if (c) c.scrollTop = 0;
+}
+
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function beep(freq, dur, type='sine', vol=0.15) {
+    try { initAudio();
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+}
+function sCorrect() { beep(880, 0.1); }
+function sWrong() { beep(200, 0.2, 'sawtooth', 0.15); }
+function sClick() { beep(700, 0.03); }
+function sWin() { for (let i = 0; i < 5; i++) setTimeout(() => beep(600 + i*80, 0.08), i*70); }
+
+// --- CUSTOM TOAST (Replaces window.alert) ---
+window._fx = window._fx || {};
+window._fx.toast = function(msg) {
+    const tt = $('toast');
+    if(!tt) return;
+    tt.textContent = msg;
+    tt.classList.add('on');
+    clearTimeout(window._fx.tm);
+    window._fx.tm = setTimeout(() => tt.classList.remove('on'), 2500);
+}
+// Override native alert to use our custom toast
+window.alert = function(msg) { window._fx.toast(msg); };
+
+// --- GAME STATE ---
+const state = {
+    mode: null, game: null, score: 0, errors: 0, correct: 0,
+    totalRounds: 0, currentRound: 0, data: {}, timer: null,
+    feedbackTimeout: null, currentItem: null, returnPage: 7,
+};
+
+const SOLO_GAMES = [
+    { id: 'fake',    icon: '🕵️', title: 'Фейк или факт',        desc: 'Правда или ложь? Проверь себя' },
+    { id: 'opinion', icon: '⚖️', title: 'Факт или мнение',       desc: 'Где объективный факт, а где чьё-то мнение' },
+    { id: 'sort',    icon: '🧲', title: 'Сортировка',            desc: 'Раскидай карточки по трём корзинам' },
+    { id: 'manip',   icon: '🎭', title: 'Манипуляция',           desc: 'Найди приём, которым тебя ведут' },
+    { id: 'slider',  icon: '📱', title: 'Фейк в ленте',          desc: 'Найди все подозрительные фразы в пересланном сообщении' },
+    { id: 'logic',   icon: '🧩', title: 'Логическая ошибка',    desc: 'Где сломалось рассуждение' },
+    { id: 'fixarg',  icon: '🛠️', title: 'Почини аргумент',      desc: 'Перепиши сломанную мысль (или скипни)' },
+];
+const PAIR_GAMES = [
+    { id: 'twotruths', icon: '🎭', title: '2 правды, 1 ложь',  desc: 'Игрок 1 загадывает — Игрок 2 угадывает' },
+    { id: 'brainstorm', icon: '💡', title: 'Мозговой штурм',    desc: 'Вдвоём придумайте аргументы за 60 секунд' },
+    { id: 'argupong',   icon: '🏓', title: 'Пинг-понг аргументов', desc: 'По очереди приводите аргументы' },
+];
+
+function selectMode(mode) {
+    sClick(); state.mode = mode; renderGameList(); goToPage(6);
+}
+
+function renderGameList() {
+    const list = state.mode === 'pair' ? PAIR_GAMES : SOLO_GAMES;
+    $('modeLabel').innerHTML = state.mode === 'pair'
+        ? '👥 Парный режим — играйте вдвоём на одном устройстве'
+        : '🧠 Индивидуальный режим — тренируйся один';
+    const grid = $('gameGrid');
+    grid.innerHTML = '';
+    list.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `<span class="g-icon">${g.icon}</span><div class="g-content"><div class="g-title">${g.title}</div><div class="g-desc">${g.desc}</div></div>`;
+        card.addEventListener('click', () => { sClick(); launchGame(g.id); });
+        grid.appendChild(card);
+    });
+}
+
+function resetState() {
+    state.score = 0; state.errors = 0; state.correct = 0;
+    state.currentRound = 0; state.totalRounds = 0; state.data = {};
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+    if (state.feedbackTimeout) { clearTimeout(state.feedbackTimeout); state.feedbackTimeout = null; }
+    $('scoreDisplay').textContent = '0';
+    $('errorsDisplay').textContent = '0';$('headerExtra').textContent = '';
+}
+
+function launchGame(id) {
+    resetState(); state.game = id; state.returnPage = 7; goToPage(7);
+    $('gameContent').innerHTML = '';$('progressBar').style.display = 'none';
+
+    switch (id) {
+        case 'fake':       startFakeGame(); break;
+        case 'opinion':    startOpinionGame(); break;
+        case 'manip':      startManipGame(); break;
+        case 'logic':      startLogicGame(); break;
+        case 'sort':       startSortGame(); break;
+        case 'race':       startRaceGame(); break;
+        case 'slider':     startFeedGame(); break;
+        case 'fixarg':     startFixArgGame(); break;
+        case 'twotruths':  startTwoTruthsGame(); break;
+        case 'brainstorm': startBrainstormGame(); break;
+        case 'argupong':   startArguPongGame(); break;
+    }
+}
+
+/* ==================== DATA HELPERS ==================== */
+const _sh=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const MQ=(type,label,icon)=>(text,right,wrong,why,detail)=>{const o=_sh([right,...wrong]);return{text,options:o,correct:o.indexOf(right),type,typeLabel:label,typeIcon:icon,why,detail:detail||why}};
+const MP=MQ('manip','Манипуляция','🎭'),LG=MQ('logic','Логическая ошибка','🧩');
+const OP=(text,isOp,why,detail)=>({text,type:isOp?'opinion':'fact',typeLabel:isOp?'Мнение':'Факт',typeIcon:isOp?'💭':'📊',why,detail:detail||why});
+const SR=(text,type,why)=>({text,type,typeLabel:{fact:'факт',opinion:'мнение',fake:'фейк'}[type],why});
+const RC=(q,right,wrong,why)=>{const a=_sh([right,wrong]);return{q,a,correct:a.indexOf(right),why}};
+const FD=(from,sub,t)=>({from,sub,text:t.replace(/\[\[(.+?)\Vert{}(.+?)\]\]/g,'<span class="flag" data-why="$2">$1</span>')});
+
+const FAKE_DATA = [
+ {text:'Великая Китайская стена видна из космоса невооружённым глазом.',isFake:true,why:'Миф. Стена очень узкая и по цвету сливается с местностью.',detail:'Космонавты говорили, что не смогли различить её с орбиты. Хорошо видны города, аэропорты.'},
+ {text:'Молния может ударить в одно и то же место много раз.',isFake:false,why:'Факт. Высокие объекты «притягивают» разряды снова и снова.',detail:'Например, небоскрёб Эмпайр-стейт-билдинг поражается молнией в среднем около 20–25 раз в год.'},
+ {text:'Человек использует только 10% своего мозга.',isFake:true,why:'Миф. Снимки мозга показывают активность во всех его областях.',detail:'Разные задачи включают разные зоны, но за сутки мы используем практически весь мозг.'},
+];
+
+function startFakeGame() {
+    state.totalRounds = FAKE_DATA.length;
+    state.data.items = [...FAKE_DATA].sort(() => Math.random() - 0.5);
+    renderFakeRound();
+}
+
+function renderFakeRound() {
+    if (state.currentRound >= state.totalRounds) return finishGame();
+    const item = state.data.items[state.currentRound];
+    state.currentItem = {
+        ...item,
+        type: item.isFake ? 'fake' : 'fact',
+        typeLabel: item.isFake ? 'Фейк' : 'Факт',
+        typeIcon: item.isFake ? '🕵️' : '✅'
+    };
+    showProgress();
+    const content = $('gameContent');
+    content.innerHTML = `
+        <div class="game-question">Это утверждение — фейк или факт?</div>
+        <div class="game-text">${item.text}</div>
+        <div class="answer-grid two">
+            <button class="answer-btn" data-ans="fake">🕵️ Фейк</button>
+            <button class="answer-btn" data-ans="fact">✅ Факт</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+    `;
+    const btns = content.querySelectorAll('.answer-btn');
+    btns.forEach(btn => btn.addEventListener('click', () => {
+        if (btns[0].disabled) return;
+        const chosen = btn.dataset.ans === 'fake';
+        const correct = chosen === item.isFake;
+        btns.forEach(b => b.disabled = true);
+        if (correct) {
+            btn.classList.add('correct'); sCorrect();
+            state.score += 15; state.correct++;
+            $('scoreDisplay').textContent = state.score;
+        } else {
+            btn.classList.add('wrong'); sWrong();
+            state.errors++;
+            $('errorsDisplay').textContent = state.errors;
+            btns.forEach(b => { if ((b.dataset.ans === 'fake') === item.isFake) b.classList.add('correct'); });
+        }
+        showFeedback(item, correct);
+    }));
+}
+
+function showFeedback(item, correct, customHtml) {
+    const fb = $('feedback');
+    if (!fb) return;
+    fb.className = 'feedback show ' + (correct ? 'good' : 'bad');
+    if (customHtml) { fb.innerHTML = customHtml; return; }
+    fb.innerHTML = `
+        <strong>${correct ? '✅ Верно!' : '❌ Ошибка.'}</strong> ${item.why}
+        <div class="fb-actions">
+            <button class="btn primary" id="nextBtn">Дальше →</button>
+        </div>
+    `;
+    $('nextBtn').addEventListener('click', () => {
+        state.currentRound++;
+        if (state.currentRound >= state.totalRounds) finishGame();
+        else renderFakeRound();
+    });
+}
+
+function showProgress() {
+    const bar = $('progressBar');
+    bar.style.display = 'block';
+    const pct = state.totalRounds ? (state.currentRound / state.totalRounds) * 100 : 0;
+    $('progressFill').style.width = pct + '%';
+}
+
+function finishGame() {
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+    if (state.feedbackTimeout) { clearTimeout(state.feedbackTimeout); state.feedbackTimeout = null; }
+    $('finalScore').textContent = state.score;
+    $('finalCorrect').textContent = state.correct;
+    $('finalErrors').textContent = state.errors;
+
+    let rank, verdict, icon;
+    if (state.score >= 150) { rank = '🥇 Мастер критического мышления'; icon = '🥇'; verdict = 'Отлично!'; } 
+    else if (state.score >= 40) { rank = '🥈 Уверенный аналитик'; icon = '🥈'; verdict = 'Хороший результат!'; } 
+    else { rank = '🌱 Первые шаги'; icon = '🌱'; verdict = 'Не расстраивайся! Критическое мышление — это навык.'; }
+    
+    $('resultIcon').textContent = icon;
+    $('finalRank').textContent = rank;
+    $('finalVerdict').textContent = verdict;
+    sWin();
+    goToPage(8);
+}
+
+$('quitGameBtn').addEventListener('click', () => {
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+    if (state.feedbackTimeout) { clearTimeout(state.feedbackTimeout); state.feedbackTimeout = null; }
+    goToPage(6);
+});
+$('retryBtn').addEventListener('click', () => { if (state.game) launchGame(state.game); else selectMode('solo'); });$('backToGamesBtn').addEventListener('click', () => goToPage(6));
+$('homeBtn').addEventListener('click', () => goToPage(1));$('backToGameBtn').addEventListener('click', () => goToPage(state.returnPage || 7));
+
+document.addEventListener('click', () => initAudio(), { once: true });
+document.addEventListener('touchstart', () => initAudio(), { once: true });
+
+// --- CONFFETI FX ---
+const cv=$('fx'),cx=cv.getContext('2d');
+const rs=()=>{cv.width=innerWidth;cv.height=innerHeight};rs();addEventListener('resize',rs);
+let P=[],run=false,streak=0;
+window._fx.burst = function(n,x,y){
+ const cols=['#8b5cf6','#ff2e93','#c6ff3d','#22d3ee'];
+ for(let i=0;i<n;i++){const a=Math.random()*6.28,s=3+Math.random()*7;P.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-4,r:3+Math.random()*4,c:cols[i%4],l:70+Math.random()*40,t:Math.random()*6})}
+ if(!run){run=true;tick()}
+}
+function tick(){
+ cx.clearRect(0,0,cv.width,cv.height);P=P.filter(p=>p.l-->0);
+ P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.25;p.vx*=.99;p.t+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.t);cx.fillStyle=p.c;cx.globalAlpha=Math.min(1,p.l/30);cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);cx.restore()});
+ P.length?requestAnimationFrame(tick):run=false;
+}
+
+// Initial Boot
+goToPage(1);
+
+</script>
+</body>
+</html>
